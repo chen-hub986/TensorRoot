@@ -102,6 +102,13 @@ def iterate_minibatches(X, y, batch_size, rng):
         yield X[batch_indices], y[batch_indices]
 
 
+def compute_metrics(model, X, y, y_one_hot):
+    probs = model.forward(X)
+    loss = float(-np.mean(np.sum(y_one_hot * np.log(probs + 1e-15), axis=1)))
+    accuracy = float(np.mean(np.argmax(probs, axis=1) == y))
+    return loss, accuracy
+
+
 if __name__ == "__main__":
     from sklearn.datasets import fetch_openml
     import matplotlib.pyplot as plt
@@ -148,13 +155,8 @@ if __name__ == "__main__":
         train_one_hot = one_hot(y_train, tensor_root.output_size)
         val_one_hot = one_hot(y_val, tensor_root.output_size)
 
-        train_probs = tensor_root.forward(X_train)
-        train_loss = float(-np.mean(np.sum(train_one_hot * np.log(train_probs + 1e-15), axis=1)))
-        train_accuracy = float(np.mean(np.argmax(train_probs, axis=1) == y_train))
-
-        val_probs = tensor_root.forward(X_val)
-        val_loss = float(-np.mean(np.sum(val_one_hot * np.log(val_probs + 1e-15), axis=1)))
-        val_accuracy = float(np.mean(np.argmax(val_probs, axis=1) == y_val))
+        train_loss, train_accuracy = compute_metrics(tensor_root, X_train, y_train, train_one_hot)
+        val_loss, val_accuracy = compute_metrics(tensor_root, X_val, y_val, val_one_hot)
 
         print(
             f"Epoch {epoch + 1}/{epochs} | "
