@@ -8,6 +8,10 @@ class TensorRoot:
 
         self.input_size = input_size
         self.hidden_sizes = list(hidden_sizes)
+        if not self.hidden_sizes:
+            raise ValueError("hidden_sizes must contain at least one positive integer.")
+        if any(size <= 0 for size in self.hidden_sizes):
+            raise ValueError("All hidden_sizes values must be positive integers.")
         self.hidden_size = self.hidden_sizes[0]
         self.output_size = output_size
         self.rng = np.random.default_rng(seed)
@@ -27,15 +31,18 @@ class TensorRoot:
     def relu(self, x) -> np.ndarray:
         return np.maximum(0, x)
 
-    def sigmoid(self, x) -> np.ndarray:
-        return 1 / (1 + np.exp(-x))
-
     def softmax(self, x) -> np.ndarray:
         shifted = x - np.max(x, axis=1, keepdims=True)
         exp_x = np.exp(shifted)
         return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
     def forward(self, X) -> np.ndarray:
+        X = np.asarray(X, dtype=np.float32)
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+        if X.ndim != 2 or X.shape[1] != self.input_size:
+            raise ValueError(f"Expected input shape (N, {self.input_size}), got {X.shape}.")
+
         self.activations = [X]
         self.hidden_zs = []
 
@@ -50,13 +57,21 @@ class TensorRoot:
         self.output = self.softmax(self.logits)
         return self.output
 
-    def relu_derivative(self, output) -> np.ndarray:
-        return output > 0
-
-    def sigmoid_derivative(self, output) -> np.ndarray:
-        return output * (1 - output)
-
     def backward(self, X, y, learning_rate=0.1, l2=0.0) -> None:
+        X = np.asarray(X, dtype=np.float32)
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+        if X.ndim != 2 or X.shape[1] != self.input_size:
+            raise ValueError(f"Expected input shape (N, {self.input_size}), got {X.shape}.")
+
+        # Recompute forward if cache is missing or from a different batch size.
+        if not hasattr(self, "output") or self.output.shape[0] != X.shape[0]:
+            self.forward(X)
+
+        y = np.asarray(y, dtype=np.float32)
+        if y.shape != self.output.shape:
+            raise ValueError(f"Expected target shape {self.output.shape}, got {y.shape}.")
+
         m = X.shape[0]
         delta = (self.output - y) / m
 
@@ -188,7 +203,6 @@ if __name__ == "__main__":
     sample_indices = rng.choice(X_val.shape[0], num_samples, replace=False)
     X_samples = X_val[sample_indices]
     y_samples = y_val[sample_indices]
-    predictions = tensor_root.predict(X_samples)
 
     for i in range(num_samples):
         test_image = X_samples[i]
