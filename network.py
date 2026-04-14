@@ -1,3 +1,5 @@
+from typing import Iterator, Tuple
+
 import numpy as np
 
 
@@ -82,27 +84,27 @@ class TensorRoot:
     def accuracy(self, X, y) -> float:
         return float(np.mean(self.predict(X) == y))
 
-    def get_parameters(self):
+    def get_parameters(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
         return [weight.copy() for weight in self.weights], [bias.copy() for bias in self.biases]
 
-    def set_parameters(self, params) -> None:
+    def set_parameters(self, params: tuple[list[np.ndarray], list[np.ndarray]]) -> None:
         weights, biases = params
         self.weights = [weight.copy() for weight in weights]
         self.biases = [bias.copy() for bias in biases]
 
 
-def one_hot(y, num_classes):
+def one_hot(y, num_classes) -> np.ndarray:
     return np.eye(num_classes, dtype=np.float32)[y]
 
 
-def iterate_minibatches(X, y, batch_size, rng):
+def iterate_minibatches(X, y, batch_size, rng) -> Iterator[tuple[np.ndarray, np.ndarray]]:
     indices = rng.permutation(X.shape[0])
     for start in range(0, X.shape[0], batch_size):
         batch_indices = indices[start:start + batch_size]
         yield X[batch_indices], y[batch_indices]
 
 
-def compute_metrics(model, X, y, y_one_hot):
+def compute_metrics(model, X, y, y_one_hot) -> Tuple[float, float]:
     probs = model.forward(X)
     loss = float(-np.mean(np.sum(y_one_hot * np.log(probs + 1e-15), axis=1)))
     accuracy = float(np.mean(np.argmax(probs, axis=1) == y))
