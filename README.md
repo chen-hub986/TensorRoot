@@ -2,7 +2,7 @@
 
 ## 中文說明
 
-一個使用 **NumPy** 從零實作的多層感知器（MLP）範例，訓練於 **MNIST** 手寫數字資料集，並在訓練後視覺化模型預測結果。
+一個使用 **NumPy** 從零實作的多層感知器（MLP），訓練於 **MNIST** 手寫數字資料集，並在訓練後視覺化模型預測結果。
 
 ### 專案特色
 
@@ -118,7 +118,7 @@ MIT License
 
 ## English Guide
 
-An MLP example implemented from scratch with **NumPy**, trained on the **MNIST** handwritten digit dataset, with prediction visualization after training.
+An MLP implemented from scratch with **NumPy**, trained on the **MNIST** handwritten digit dataset, with prediction visualization after training.
 
 ### Features
 
